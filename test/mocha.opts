@@ -1,0 +1,6 @@
+--require ./test/init
+--require should
+--timeout 60000
+--reporter spec
+--ui bdd
+--recursive
