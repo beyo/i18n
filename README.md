@@ -1,4 +1,7 @@
-## Beyo i18n [![Build Status](https://travis-ci.org/beyo/i18n.png)](https://travis-ci.org/beyo/i18n)
+## Beyo i18n
+
+[![Build Status](https://travis-ci.org/beyo/i18n.png)](https://travis-ci.org/beyo/i18n)
+[![Stories in Ready](http://badge.waffle.io/beyo/i18n.png)](http://waffle.io/beyo/i18n)
 
 Internationalisation module for Node.js with plural forms and paramater subtitutions.
 
