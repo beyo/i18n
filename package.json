@@ -11,9 +11,10 @@
     "url": "https://github.com/beyo/i18n.git"
   },
   "keywords": [
+    "beyo",
     "i18n",
     "plural",
-    "substitution",
+    "subtitution",
     "translate",
     "translation",
     "multilanguage"
