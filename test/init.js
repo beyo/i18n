@@ -8,3 +8,5 @@ if (!process.env.TRAVIS) {
 
   require('semicov').init('lib');
 }
+
+require('tmp').setGracefulCleanup();

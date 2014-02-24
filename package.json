@@ -25,12 +25,10 @@
     "url": "https://github.com/beyo/i18n/issues"
   },
   "homepage": "https://github.com/beyo/i18n",
-  "dependencies": {
-
-  },
   "devDependencies": {
     "semicov": "*",
     "should": "~1.2.2",
-    "mocha": "~1.8.2"
+    "mocha": "~1.8.2",
+    "tmp": "latest"
   }
 }

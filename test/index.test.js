@@ -1,7 +1,7 @@
 
 var I18N = require('../lib/index.js');
 
-describe('Test I18N', function() {
+describe('Module entry (i18n)', function() {
 
   before(function() {
     // define dummy locales
@@ -9,7 +9,19 @@ describe('Test I18N', function() {
     I18N.setLocale('bar', { name: 'BarTest', plural: function() { return 0; } });
   });
 
-  describe('Checking Global Translator', function() {
+  it('should not allow overriding `defaultLocale`');
+
+  it('should not allow overriding `getCatalog`');
+
+  it('should not allow overriding `translate`');
+
+  it('should not allow overriding `locales`');
+
+  it('should not allow overriding `setLocale`');
+
+  it('should not allow directly modifying `locales`');
+
+  describe('Using Global Translator', function() {
 
     it('should return the same global translator', function() {
       var t = I18N.getGlobalTranslator();
@@ -58,7 +70,6 @@ describe('Test I18N', function() {
 
     gt.defaultLocale.should.be.equal('foo').and.should.not.be.equal(tt.defaultLocale);
     tt.defaultLocale.should.be.equal('bar').and.should.not.be.equal(gt.defaultLocale);
-
   });
 
 });
