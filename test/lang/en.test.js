@@ -1,22 +1,26 @@
 
 var lang = require('../../lib/lang/en');
 
-describe('Language EN', function() {
+describe('Language EN', function () {
 
-  it('should have a valid name', function() {
+  it('should have a valid name', function () {
     lang.name.should.equal('English');
   });
 
-  it('should return "one" when not plural', function() {
+  it('should have a valid nplurals value', function () {
+    lang.nplurals.should.equal(2);
+  });
+
+  it('should return "one" when not plural', function () {
     lang.plural(1).should.equal('one');
     lang.plural('1').should.equal('one');
   });
 
-  it('should return "other" for any other value', function() {
+  it('should return "other" for any other value', function () {
     [
       null, undefined, false, true,
       -10, -2, -1.0000000000001, -1, -0.1, 0, 0.1, 1.0000000000001, 2, 3, 10
-    ].forEach(function(v) {
+    ].forEach(function (v) {
       lang.plural(v).should.equal('other');
       lang.plural(String(v)).should.equal('other');
     });
