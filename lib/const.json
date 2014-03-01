@@ -1,0 +1,13 @@
+{
+  "MESSAGE_ZERO": "zero",
+  "MESSAGE_ONE": "one",
+  "MESSAGE_TWO": "two",
+  "MESSAGE_FEW": "few",
+  "MESSAGE_MANY": "many",
+  "MESSAGE_OTHER": "other",
+
+  "DEFAULT_LOCALE": "en",
+  "DEFAULT_GENDER": "M",
+
+  "DEFAULT_SUBSTITUTION_PATTERN": "\\{\\{([\\w.]+)\\}\\}"
+}

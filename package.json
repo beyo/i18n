@@ -1,10 +1,10 @@
 {
   "name": "beyo-i18n",
-  "version": "0.0.3-dev",
+  "version": "0.0.4-dev",
   "description": "Internationalisation module for Node.js with plural forms and paramater subtitutions.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --harmony"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,10 @@
     "subtitution",
     "translate",
     "translation",
-    "multilanguage"
+    "multilanguage",
+    "generator",
+    "async",
+    "asynchronous"
   ],
   "author": "Yanick Rochon <yanick.rochon@gmail.com>",
   "license": "MIT",
@@ -26,9 +29,18 @@
   },
   "homepage": "https://github.com/beyo/i18n",
   "devDependencies": {
-    "semicov": "*",
-    "should": "~1.2.2",
-    "mocha": "~1.8.2",
-    "tmp": "latest"
+    "semicov": "latest",
+    "should": "latest",
+    "mocha": "latest",
+    "tmp": "latest",
+    "co-mocha": "latest",
+    "q": "latest"
+  },
+  "dependencies": {
+    "co": "latest",
+    "co-fs": "latest"
+  },
+  "engines": {
+    "node": ">= 0.11.9"
   }
 }

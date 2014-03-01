@@ -10,3 +10,6 @@ if (!process.env.TRAVIS) {
 }
 
 require('tmp').setGracefulCleanup();
+
+// setting globals
+GLOBAL.assert = global.assert = require('assert');
