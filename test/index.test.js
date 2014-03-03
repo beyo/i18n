@@ -1,6 +1,6 @@
 
 var I18N = require('../lib/index');
-
+var C = require('../lib/const');
 
 describe('Module entry (i18n)', function () {
 
@@ -28,15 +28,22 @@ describe('Module entry (i18n)', function () {
     });
   });
 
-  it('should not allow overriding `getCatalog`', function () {
-    var _ref = I18N.getCatalog;
+  it('should only allow valid `defaultGender` values', function () {
+    var _ref = I18N.defaultGender;
 
     [
-      function f() {}, {}, undefined, null, true, false, 0, 1, "", "##INVALIDVALUE"
+      function f() {}, undefined, null, true, false, 0, 1, "", "##INVALIDVALUE",
+      "M", "F", "N"  // case sensitive
     ].forEach(function (v) {
-      I18N.getCatalog = v;
-      I18N.getCatalog.should.not.equal(v);
-      _ref.should.equal(I18N.getCatalog);
+      (function() {
+        I18N.defaultGender = v;
+      }).should.throw();
+    });
+
+    _ref.should.equal(I18N.defaultGender);
+
+    [C.GENDER_MALE, C.GENDER_FEMALE, C.GENDER_NEUTRAL].forEach(function (gender) {
+      I18N.defaultGender = gender;
     });
   });
 
@@ -134,15 +141,35 @@ describe('Module entry (i18n)', function () {
     tt.defaultLocale.should.be.equal('bar').and.should.not.be.equal(gt.defaultLocale);
   });
 
-  it('should allow defining new local specs', function() {
+  it('should allow defining new local specs', function () {
     I18N.locales.should.not.have.ownProperty('test');
 
     I18N.setLocale('test', {
       name: 'TestLocale',
-      plural: function(n) { return 'other'; }
+      plural: function (n) { return 'other'; }
     });
 
     I18N.locales.should.have.ownProperty('test');
+  });
+
+  it('should not allow defining invalid specs', function () {
+    [
+      undefined, false, null, 0, "",
+      [], {}, { name: 'foo' }
+    ].forEach(function (invalidSpecs, index) {
+      (function () {
+        I18N.setLocale(invalidSpecs);
+      }).should.throw();
+      (function () {
+        I18N.setLocale(I18N.defaultLocale, invalidSpecs);
+      }).should.throw();
+      (function () {
+        I18N.setLocale(C.DEFAULT_LOCALE, invalidSpecs);
+      }).should.throw();
+      (function () {
+        I18N.setLocale('foo', invalidSpecs);
+      }).should.throw();
+    });
   });
 
 });

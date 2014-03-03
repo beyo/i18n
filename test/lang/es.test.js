@@ -1,5 +1,6 @@
 
 var lang = require('../../lib/lang/es');
+var C = require('../../lib/const');
 
 describe('Language ES', function() {
 
@@ -12,8 +13,8 @@ describe('Language ES', function() {
   });
 
   it('should return "one" when not plural', function () {
-    lang.plural(1).should.equal('one');
-    lang.plural('1').should.equal('one');
+    lang.plural(1).should.equal(C.MESSAGE_ONE);
+    lang.plural('1').should.equal(C.MESSAGE_ONE);
   });
 
   it('should return "other" for any other value', function () {
@@ -21,8 +22,8 @@ describe('Language ES', function() {
       null, undefined, false, true,
       -10, -2, -1.0000000000001, -1, -0.1, 0, 0.1, 1.0000000000001, 2, 3, 10
     ].forEach(function (v) {
-      lang.plural(v).should.equal('other');
-      lang.plural(String(v)).should.equal('other');
+      lang.plural(v).should.equal(C.MESSAGE_OTHER);
+      lang.plural(String(v)).should.equal(C.MESSAGE_OTHER);
     });
   });
 

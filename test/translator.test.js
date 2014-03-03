@@ -8,6 +8,7 @@ var co = require('co');
 var Q = require('q');
 
 var I18N = require('../lib/index');
+var C = require('../lib/const');
 
 
 describe('Testing Translator', function () {
@@ -16,17 +17,40 @@ describe('Testing Translator', function () {
   var testLocale = 'test';
   var testLocaleSpecs = {
     name: 'TestLang',
-    plural: function plural(n) { return (n === 1) ? 'one' : 'other'; }
+    plural: function plural(n) { return (n === 1) ? '1' : '*'; }
   };
   var testMessages = {
     'Hello world!': 'Test!',
     'Hello plural!': {
-      'one': 'Hello you!',
-      'other': 'Hello everyone!'
+      '1': 'Hello you!',
+      '*': 'Hello everyone!'
     },
     '{{count}} notifications': {
-      'one': '1 message',
-      'other': '{{count}} messages'
+      '1': '1 message',
+      '*': '{{count}} messages'
+    },
+    'Hello you!': 'Hello {{person.names.0.first}}!',
+    'Hello gender!': {
+      '*': {
+        'm': 'Hello m!',
+        'f': 'Hello f!',
+        'n': 'Hello n!'
+      }
+    },
+    'Hello gender plural!': {
+      '1': {
+        'm': 'Hello m non-plural!',
+        'n': 'Hello n non-plural!',
+      },
+      '*': {
+        'f': 'Hello f plural!',
+        'n': 'Hello n plural!'
+      }
+    },
+    'Hello invalid gender!': {
+      '*': {
+        'f': 'Hello ladies!'
+      }
     }
   };
 
@@ -37,16 +61,24 @@ describe('Testing Translator', function () {
       if (err) {
         throw err;
       }
-      var file = path + '/' + testLocale + '.json';
+      var file = path + '/foo';
 
       localePath = path;
 
-      fs.writeFile(file, JSON.stringify(testMessages), function (err) {
+      fs.mkdir(file, function (err) {
         if (err) {
           throw err;
         }
 
-        done();
+        file += '/' + testLocale + '.json';
+
+        fs.writeFile(file, JSON.stringify(testMessages), function (err) {
+          if (err) {
+            throw err;
+          }
+
+          done();
+        });
       });
     });
   });
@@ -92,34 +124,57 @@ describe('Testing Translator', function () {
     this.timeout(500);
   });
 
-  it('should load locales from specified directory', function (done) {
-    new Translator({ locales: localePath }).on('initialized', function (err) {
-      assert.equal(err, null);
+  it('should load locales from specified directory', function * () {
+    var translator = new Translator();
 
-      // test that we have loaded the locale correctly
-      Q.async(this.translate).call(this, 'Hello world!', { locale: testLocale }).should.equal('Test!');
+    yield translator.load(localePath);
 
-      done();
+    (yield translator.translate('Hello world!', { locale: testLocale })).should.equal('Test!');
+  });
+
+  it('should load locales from array', function * () {
+    var translator = new Translator();
+
+    yield translator.load([ localePath + '/foo/' + testLocale + '.json' ]);
+
+    (yield translator.translate('Hello world!', { locale: testLocale })).should.equal('Test!');
+  });
+
+  it('should not load invalid locales', function (done) {
+    var invalidLocales = [
+      undefined, null, false, true, 0, 1, 2, 3, { whatever: 'foo' }
+    ];
+    var invalidLocalesCount = invalidLocales.length * 2;
+    function checkDone() {
+      if ((--invalidLocalesCount) <= 0) {
+        done();
+      }
+    }
+
+    invalidLocales.forEach(function (invalidLocale) {
+      new Translator({ locales: invalidLocale }).on('initialized', function (err) {
+        err.should.be.and.Error;
+        checkDone();
+      });
+      new Translator({ locales: [ invalidLocale ] }).on('initialized', function (err) {
+        err.should.be.an.Error;
+        checkDone();
+      });
     });
 
     this.timeout(500);
   });
 
-  it('should load locales from array', function (done) {
-    var arr = [
-      localePath + '/' + testLocale + '.json'
-    ];
+  it('should not allow overriding locales', function (done) {
+    var translator = new Translator({ locales: localePath });
 
-    new Translator({ locales: arr }).on('initialized', function (err) {
-      assert.equal(err, null);
-
-      // test that we have loaded the locale correctly
-      Q.async(this.translate).call(this, 'Hello world!', { locale: testLocale }).should.equal('Test!');
+    co(function * () {
+      yield translator.load(localePath);
+    })(function (err) {
+      err.should.be.an.Error;
 
       done();
     });
-
-    this.timeout(500);
   });
 
   it('should load locales after init', function * () {
@@ -149,6 +204,26 @@ describe('Testing Translator', function () {
 
     Object.keys(I18N.locales).forEach(function (locale) {
       translator.defaultLocale = locale;
+    });
+  });
+
+  it('should only allow valid `defaultGender` values', function () {
+    var translator = new Translator();
+    var _ref = translator.defaultGender;
+
+    [
+      function f() {}, undefined, null, true, false, 0, 1, "", "##INVALIDVALUE",
+      "M", "F", "N"  // case sensitive
+    ].forEach(function (v) {
+      (function() {
+        translator.defaultGender = v;
+      }).should.throw();
+    });
+
+    _ref.should.equal(translator.defaultGender);
+
+    [C.GENDER_MALE, C.GENDER_FEMALE, C.GENDER_NEUTRAL].forEach(function (gender) {
+      translator.defaultGender = gender;
     });
   });
 
@@ -202,6 +277,9 @@ describe('Testing Translator', function () {
 
     yield translator.load(localePath);
 
+    (yield translator.translate('Hello world!', { locale: testLocale, plurality: 1 })).should.equal('Test!');
+    (yield translator.translate('Hello world!', { locale: testLocale, plurality: 2 })).should.equal('Test!');
+
     (yield translator.translate('Hello plural!')).should.equal('Hello plural!');
     (yield translator.translate('Hello plural!', { locale: testLocale, plurality: 1 })).should.equal('Hello you!');
 
@@ -211,7 +289,60 @@ describe('Testing Translator', function () {
     (yield translator.translate('Hello plural!', { locale: testLocale, plurality: 2 })).should.equal('Hello everyone!');
   });
 
-  it('should handle gender');
+  it('should handle gender', function * () {
+    var genders = [ C.GENDER_MALE, C.GENDER_FEMALE, C.GENDER_NEUTRAL ];
+
+    var translator = new Translator({ defaultLocale: testLocale });
+
+    translator.defaultLocale.should.equal(testLocale);
+
+    yield translator.load(localePath);
+
+    (yield translator.translate('Hello gender!')).should.equal('Hello n!');
+
+    for (var g = 0; g < genders.length; g++) {
+      (yield translator.translate('Hello gender!', { gender: genders[g] })).should.equal('Hello ' + genders[g] + '!');
+    }
+
+    (yield translator.translate('Hello gender!', { pluraity: 1, gender: 'm' })).should.equal('Hello m!');
+    (yield translator.translate('Hello gender!', { pluraity: 2, gender: 'm' })).should.equal('Hello m!');
+  });
+
+  it('should throw exception on invalid gender during translation', function (done) {
+    var def1 = Q.defer();
+    var def2 = Q.defer();
+    var translator = new Translator({ defaultLocale: testLocale, locales: localePath });
+
+    translator.defaultLocale.should.equal(testLocale);
+
+    // FIXME : ... what an ugly piece of code...
+    translator.on('initialized', function () {
+      co(function * () {
+        yield translator.translate('Hello invalid gender!', { gender: 'foo' });
+      })(function (err) {
+        def1.resolve(err ? undefined : new Error('Expected invalid gender : foo'));
+      });
+
+      co(function * () {
+        yield translator.translate('Hello invalid gender!', { gender: C.GENDER_MALE });
+      })(function (err) {
+        def2.resolve(err ? undefined : new Error('Expected missing gender for msgId'));
+      });
+    });
+
+    Q.all([def1.promise, def2.promise]).then(function (errStatus) {
+      if (!errStatus.some(function (err) {
+        if (err) {
+          done(err);
+          return true;
+        }
+      })) {
+        done();
+      }
+    });
+
+    this.timeout(500);
+  });
 
   it('should substitute placeholders in messages', function * () {
     var translator = new Translator({ defaultLocale: testLocale });
@@ -227,6 +358,25 @@ describe('Testing Translator', function () {
     (yield translator.translate('{{count}} notifications', { data: data })).should.equal('10 messages');
     (yield translator.translate('{{count}} notifications', { plurality: 1, data: data })).should.equal('1 message');
     (yield translator.translate('{{count}} notifications', { plurality: 10, data: data })).should.equal('10 messages');
+
+    (yield translator.translate('Hello you!', { data: { person: { names: [ { first: 'Bob' } ] } } })).should.equal('Hello Bob!');
+
+    // using an invalid locale
+    (yield translator.translate('{{count}} notifications', { locale: testLocale+'xxx'})).should.equal(' notifications');
+  });
+
+  describe("Translator events", function () {
+
+    it('should emit `initialized`');
+
+    it('should emit `defaultLocaleChanged`');
+
+    it('should emit `defaultGenderChanged`');
+
+    it('should emit `localeLoaded`');
+
+    it('should emit `translation`');
+
   });
 
 });

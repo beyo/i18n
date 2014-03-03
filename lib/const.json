@@ -1,13 +1,17 @@
 {
-  "MESSAGE_ZERO": "zero",
-  "MESSAGE_ONE": "one",
-  "MESSAGE_TWO": "two",
-  "MESSAGE_FEW": "few",
-  "MESSAGE_MANY": "many",
-  "MESSAGE_OTHER": "other",
+  "MESSAGE_ZERO": "0",
+  "MESSAGE_ONE": "1",
+  "MESSAGE_TWO": "2",
+  "MESSAGE_FEW": "~",
+  "MESSAGE_MANY": "+",
+  "MESSAGE_OTHER": "*",
+
+  "GENDER_MALE": "m",
+  "GENDER_FEMALE": "f",
+  "GENDER_NEUTRAL": "n",
 
   "DEFAULT_LOCALE": "en",
-  "DEFAULT_GENDER": "M",
+  "DEFAULT_GENDER": "n",
 
   "DEFAULT_SUBSTITUTION_PATTERN": "\\{\\{([\\w.]+)\\}\\}"
 }

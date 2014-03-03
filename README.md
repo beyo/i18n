@@ -6,8 +6,8 @@
 Internationalisation module for Node.js with plural forms and paramater subtitutions.
 
 So, why another i18n module? Because I wanted a module which was not dependant or bloated
-with unnecessary dependencies or features. I wanted a module that was standalone. I wanted
-a module that followed standards. I wanted it to be easily extended.
+with unnecessary dependencies or features. I wanted a module that was standalone and asychronous.
+I wanted a module that followed standards. I wanted it to be easily extended.
 
 This module is intended to be a community effort. As it is not incorporated in any major
 project, yet (as far as I know anyway), it is a plastic module and may be subject to changes.
@@ -21,10 +21,12 @@ npm install beyo-i18n
 
 ## Features
 
-* Autoloading localization strings via various adapters (see Adapters).
+* Asynchronous API through generator functions [`co`](https://github.com/visionmedia/co) compatible.
+* Autoloading localization strings via various loaders (see Loaders).
 * Global translator and instance translators.
 * Fallback to default locale per translator.
 * Automatically handling plural forms in a variety of different languages (see Supported locales).
+* Automatically handling gender forms (locale agnostic).
 * Message token subtitution during translation.
 * Translators emit events.
 * Possibility to override just about anything.
@@ -35,22 +37,24 @@ npm install beyo-i18n
 
 ```javascript
 // Note : calling 'init' is optional
-var i18n = require('beyo-i18n').init(options[, callback]);
+var i18n = require('beyo-i18n').init(options);
 
-var data = {
-  locale: 'fr',       // set the locale to use to translate
-  data: {
-    person: {
-      firstname: 'John',
-      lastname: 'Smith',
-      ...
-    },
-    ...
-  }
-};
+co(function * () {
+  var data = {
+    locale: 'fr',       // set the locale to use to translate
+    data: {
+      person: {
+        firstname: 'John',
+        lastname: 'Smith',
+        //...
+      },
+      //...
+    }
+  };
 
-i18n.translate("Hello {{person.firstname}}!", data);
-// -> "Bonjour John !"
+  yield i18n.translate("Hello {{person.firstname}}!", data);
+  // -> "Bonjour John !"
+})();
 ```
 
 ## Translator Configuration
@@ -65,31 +69,44 @@ and no locale is provided. This setting is global! And you cannot set a locale t
 is not available. An invalid locale will throw an exception. All available locales are
 listed in the `i18n.locales`'s object properties. *(Default: `'en'`)*
 
+* **defaultGender** *{String}* : The default gender to use when translating a message
+and no gender is provided. A gender must be one of these values : `"m"`, `"f"`, and `"n"`.
+*(Default: `'n'`)*
+
 * **subtitutionPattern** *{Regex|String}* : The subtitution pattern to recognize the
-tokens in a translatation message. While this value can be a string, it very much should
+tokens in a translatation message. While this value may be a string, it very much should
 be a regular expression for things to work properly. *(Default: `/\{\{([\w.]+)\}\}/g`)*
 
-* **messages** *{Object}* : An object containing translation strings, where the keys are
-the messages locales and the associated values are objects with translation messages
-information. See [Language Plural Rules](#language-plural-rules) for more information.
-*(Default: `null`)*
+* **locales** *{mixed}* : The given value will be passed to the `load` method when
+initializing the translator. The value may be of type `String`, `Array` or `Object`.
+*(Default: `null`)* **Note**: `Object`s may be be handled at this time by any loader.
 
   For example :
 
   ```javascript
-  var messages = {
-    'es': {
-      'Hello world!': '¡Hola, mundo!'
-    },
-    'fr': {
-      'Hello world!': 'Bonjour, monde!'
-    }
-  };
+  var localesDir  = 'path/to/lc_locales';
+  // or
+  var localesFiles = [ 'path/to/en.json', 'path/to/fr.json', ... ];
   ```
 
-* **autoload** *{String}* : A path where to load the translation strings from files. This
-option will scan the selected path recursively and load any file that can be imported by
-the available [adapters](#adapters). *(Default: `null`)*
+## Events
+
+All translators emit events. These may be used to extend a translator, or to monitor it's
+activity.
+
+* **initialized** *(no argument)* : fired only once after the translator is done initializing.
+* **defaultLocaleChanged** *(Object)* : fired when the translator's default locale is changed.
+The listener will receive one argument; an object, for example : `{ previousValue: 'en' }`.
+* **defaultGenderChanged** *(Object)* : fired when the translator's default gender is changed.
+The listener will receive one argument; an object, for example : `{ previousValue: 'n' }`.
+* **localeLoaded** *(Object)* : fired whenever a locale is loaded into the translator. This is
+handy when extending locale loaders. The listener will receive one argument; an object, for
+example : `{ locale: 'en', loader: [Object] }` (see Loaders).
+* **translation** *(Object)* : fired whenever a string is translated. The listener will
+receive one argument; an object, for example : `{ locale: 'fr', originalMessage: 'Hello!',
+translatedMessage: 'Bonjour!', options: null }` where the `options` are the actual object
+passed to the `translate` function. **Note**: replacing `translatedMessage`'s value will
+result in changing the translation's returned string!
 
 ## Language Plural Rules
 
@@ -107,12 +124,12 @@ Also, an important information to know is that the actual "meaning" of every pro
 language dependant! See the [language specifications](#language-specifications) for more
 information.
 
-* `'zero'` : Depending on the language; where there's nothing.
-* `'one'` : Depending on the language; where there's an unicity in number.
-* `'two'` : Depending on the language; where there's a pair.
-* `'few'` : Depending on the language; where there's a small amount.
-* `'many'` : Depending on the language; where there's a fairly large amount.
-* `'other'` : Any other specification goes here. This is the default langauge key; where
+* `'0'` *(zero)* : Depending on the language; where there's nothing.
+* `'1'` *(one)* : Depending on the language; where there's an unicity in number.
+* `'2'` *(two)* : Depending on the language; where there's a pair.
+* `'~'` *(tilde = approx, many)* : Depending on the language; where there's a small amount.
+* `'+'` *(plus = many)* : Depending on the language; where there's a fairly large amount.
+* `'*'` *(default = other)* : Any other specification goes here. This is the default langauge key; where
 we may find fractions, negative or otherwise unspecified or very large numbers. For any
 translation, this should always be specified at all times. This is also the fallback
 translation in case other language keys or not defined.
@@ -137,9 +154,10 @@ given translation messages.
 
 ### Language Specifications
 
-A language specifications is a node.js module exposing at least two properties;
+A language specifications is a node.js module exposing at least three properties;
 
 * **name** *{String}* : the language or locale english name.
+* **nplurals** *{Numeric}* : the number of different plural forms for this language.
 * **plural** *{Function}* : a function receiving one argument (typically numeric) and should
 return one of the human-readable plural object property.
 
@@ -150,29 +168,52 @@ Example :
 module.exports.name = 'French';
 
 module.exports.plural = function plural(n) {
-  return (n === 0) || (n === 1) ? 'one' : 'other';
+  return (n === 0) || (n === 1) ? '1' : '*';
 };
 ```
 
-## Adapters
+If a locale does not provide a language specification, the loader will assign the proper
+default one that is shipped with the module. If no language specification is found, then
+the locale cannot be loaded and an exception will be thrown.
 
-Adapters allow loading locale messages directly from files. The adapter should be a node
-module receiving the file path (should be absolute) and should return `false` if the file
-cannot be handled, or an `Object` containing the locale information and messages. For
-example :
+## Language Gender Rules
+
+Some loaders will enable gender specifications when loading locales content. These
+gender rules *must* be loaded inside a plural rule. If no plural rule applies, use the "other" (`'*'`) plural rule. For example :
 
 ```javascript
 {
-  locale: 'fr',
-  messages: {
-    'Hello world!': 'Bonjour, monde!',
-    'You have {{length}} items': {
-      'one': 'Vous avez {{length}} article',
-      'other': 'Vous avez {{length}} articles'
+  "Restrooms" : {
+    "*": {
+      "n": "Restrooms",
+      "m": "Men's rooms",
+      "f": "Ladies' rooms"
     }
   }
 }
 ```
+
+A gender key must be one of the following values (case sensitive) : `'m'` for male, `'f'` for female, and `'n'` for neutral.
+
+## Loaders
+
+Loaders allow an abstraction layer while accessing locale messages. The loader should be a
+`GeneratorFunction` receiving only one argument and should return `false` if the argument
+cannot be handled, or an `Object` containing the locale information and messages. This
+object should propose at least these following methods.
+
+* **locale** *{string}*
+* **contains** *{GeneratorFunction}*
+* **get** *{GeneratorFunction}*
+* **forEach** *{Function}*
+
+The returned value for a call to `get` should be one of the following :
+
+* `"Some simple string."`
+* `{ "1": "Non plural string", "*": "Default (plural) string" }`
+* `{ "*": { "m": "Male gender", "f": "Female gender", "n": "Neutral gender" } }`
+
+And any combination of these values.
 
 ### List of available (or soon to be) adapters
 
@@ -181,10 +222,6 @@ import modules. The locale is determined from the filename, therefore the file s
 named like `en.js` for English, `fr.js` for French, and so on. The files may as well be
 JSON files (i.e. `es.json`). It's very fast as it's parsed by the engine thus is already
 an `Object`.
-
-* **xml** : *not implemented*
-
-* **ini** : *not implemented*
 
 * **gettext** : *not implemented*
 
