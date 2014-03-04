@@ -367,15 +367,70 @@ describe('Testing Translator', function () {
 
   describe("Translator events", function () {
 
-    it('should emit `initialized`');
+    it('should emit `initialized`', function (done) {
 
-    it('should emit `defaultLocaleChanged`');
+      new Translator().on('initialized', function () {
+        done();
+      });
 
-    it('should emit `defaultGenderChanged`');
+      this.timeout(500);
+    });
 
-    it('should emit `localeLoaded`');
+    it('should emit `defaultLocaleChanged`', function (done) {
+      var translator = new Translator().on('defaultLocaleChanged', function (evtData) {
+        evtData.previousValue.should.not.equal(testLocale);
+        this.defaultLocale.should.equal(testLocale);
 
-    it('should emit `translation`');
+        done();
+      });
+
+      translator.defaultLocale = testLocale;
+    });
+
+    it('should emit `defaultGenderChanged`', function (done) {
+      var translator = new Translator().on('defaultGenderChanged', function (evtData) {
+        evtData.previousValue.should.equal(C.GENDER_NEUTRAL);
+        this.defaultGender.should.equal(C.GENDER_MALE);
+
+        done();
+      });
+
+      translator.defaultGender = C.GENDER_MALE;
+    });
+
+    it('should emit `localeLoaded`', function (done) {
+      var translator = new Translator().on('localeLoaded', function (evtData) {
+        evtData.should.have.ownProperty('locale').equal('test');
+        evtData.should.have.ownProperty('loader').and.have.ownProperty('get').be.a.Function;
+
+        done();
+      });
+
+      co(function * () {
+        yield translator.load(localePath);
+      })();
+
+      this.timeout(500);
+    });
+
+    it('should emit `translation`', function (done) {
+      var msgId = 'Translate event test...';
+      var msgText = '... is a Success!';
+      var translator = new Translator().on('translation', function (evtData) {
+        evtData.locale.should.equal(translator.defaultLocale);
+        evtData.messageId.should.equal(msgId);
+        evtData.messageText.should.equal(msgId);
+        evtData.messageText = msgText;
+      });
+
+      co(function * () {
+        (yield translator.translate(msgId)).should.equal(msgText);
+
+        done();
+      })();
+
+      this.timeout(500);
+    });
 
   });
 

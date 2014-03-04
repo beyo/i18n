@@ -1,4 +1,7 @@
 
+var Q = require('q');
+var co = require('co');
+
 var I18N = require('../lib/index');
 var C = require('../lib/const');
 
@@ -121,7 +124,48 @@ describe('Module entry (i18n)', function () {
       new I18N.Translator().should.not.equal(newTranslator).and.should.not.equal(t);
     });
 
-    it('should persist listeners when init new global translator');
+    it('should persist listeners when init new global translator', function (done) {
+      var deferred = [];
+
+      // let's assume that the event `localeLoaded` will be persisted if all others are :)
+      // skipping this event because writing a temporary locale just for this is not necessary!
+      ['initialized', 'defaultLocaleChanged', 'defaultGenderChanged'/*, 'localeLoaded'*/, 'translation'].forEach(function (event) {
+        var def = Q.defer();
+
+        deferred.push(def.promise);
+
+        I18N.getGlobalTranslator().on(event, function () {
+          def.resolve();
+        });
+      });
+
+      var _oldTrans = I18N.getGlobalTranslator();
+
+      I18N.init();  // reset new translator
+
+      _oldTrans.should.not.equal(I18N.getGlobalTranslator());
+
+      co(function * () {
+
+        I18N.getGlobalTranslator().defaultLocale = 'foo';
+        I18N.getGlobalTranslator().defaultGender = C.GENDER_MALE;
+        yield (I18N.getGlobalTranslator().translate)('Test translation event');
+
+      })(function (err) {
+        if (err) {
+          done(err);
+        }
+      });
+
+      Q.all(deferred).done(function (results) {
+        results.forEach(function (result) {
+          assert.equal(result, undefined);
+        });
+        done();
+      });
+
+      this.timeout(500);
+    });
 
   });
 

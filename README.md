@@ -9,10 +9,6 @@ So, why another i18n module? Because I wanted a module which was not dependant o
 with unnecessary dependencies or features. I wanted a module that was standalone and asychronous.
 I wanted a module that followed standards. I wanted it to be easily extended.
 
-This module is intended to be a community effort. As it is not incorporated in any major
-project, yet (as far as I know anyway), it is a plastic module and may be subject to changes.
-However, since this module aims at following standards, any change will only be for the best!
-
 ## Installation
 
 ```
@@ -79,7 +75,7 @@ be a regular expression for things to work properly. *(Default: `/\{\{([\w.]+)\}
 
 * **locales** *{mixed}* : The given value will be passed to the `load` method when
 initializing the translator. The value may be of type `String`, `Array` or `Object`.
-*(Default: `null`)* **Note**: `Object`s may be be handled at this time by any loader.
+*(Default: `null`)* **Note**: `Object`s may not be handled at this time by any loader.
 
   For example :
 
