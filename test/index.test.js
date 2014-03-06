@@ -14,6 +14,21 @@ describe('Module entry (i18n)', function () {
     plurals.setRule('bar', { languageName: 'BarTest', nplurals: [ C.MESSAGE_OTHER ], plural: function () { return 0; } });
   });
 
+  it('should expose `Translator`', function () {
+    I18N.Translator.should.be.a.Function;
+    I18N.Translator.should.be.a.equal(require('../lib/translator'));
+  });
+
+  it('should expose `const`', function () {
+    I18N.const.should.be.an.Object;
+    I18N.const.should.be.a.equal(require('../lib/const'));
+  });
+
+  it('should expose `plurals`', function () {
+    I18N.plurals.should.be.a.Function;
+    I18N.plurals.should.be.a.equal(require('../lib/plurals'));
+  });
+
   it('should only allow valid `defaultLocale` values', function () {
     var _ref = I18N.defaultLocale;
 

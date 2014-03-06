@@ -26,6 +26,7 @@ npm install beyo-i18n
 * Message token subtitution during translation.
 * Translators emit events.
 * Possibility to override just about anything.
+* Frozen objects with validations across all setters
 * Fully tested with a target of 100% coverage.
 * Well structured code.
 
@@ -120,12 +121,12 @@ Also, an important information to know is that the actual "meaning" of every pro
 language dependant! See the [language specifications](#language-specifications) for more
 information.
 
-* `'0'` *(zero)* : Depending on the language; where there's nothing.
-* `'1'` *(one)* : Depending on the language; where there's an unicity in number.
-* `'2'` *(two)* : Depending on the language; where there's a pair.
-* `'~'` *(tilde = approx, many)* : Depending on the language; where there's a small amount.
-* `'+'` *(plus = many)* : Depending on the language; where there's a fairly large amount.
-* `'*'` *(default = other)* : Any other specification goes here. This is the default langauge key; where
+* `'zero'` : Depending on the language; where there's nothing.
+* `'one'` : Depending on the language; where there's an unicity in number.
+* `'two'` : Depending on the language; where there's a pair.
+* `'few'` : Depending on the language; where there's a small amount.
+* `'many'` : Depending on the language; where there's a fairly large amount.
+* `'*'` *(default)* : Any other specification goes here. This is the default langauge key; where
 we may find fractions, negative or otherwise unspecified or very large numbers. For any
 translation, this should always be specified at all times. This is also the fallback
 translation in case other language keys or not defined.
@@ -150,27 +151,41 @@ given translation messages.
 
 ### Language Specifications
 
-A language specifications is a node.js module exposing at least three properties;
+All supported locales can be fetched via `require('beyo-i18n').plurals`. Apart from being a
+callable function to retrieve the plurality key for a given local and n, the `plurals` object
+also exposes the following API functionalities :
 
-* **name** *{String}* : the language or locale english name.
-* **nplurals** *{Numeric}* : the number of different plural forms for this language.
-* **plural** *{Function}* : a function receiving one argument (typically numeric) and should
-return one of the human-readable plural object property.
+* **isValid(locale)** *:{Boolean}* : returns true if and only if the following locale resolves to
+a plural rule.
+* **getLanguages()** *{Object}* : returns an `Object` whose keys are the various available locales
+and the values are the associated language english names.
+* **getRule(locale)** *{Object}* : returns an `Object` of the specified locale's plurality rules.
+If the locale is invalide, `undefined` is returned.
+* **setRule(locale, rule)** : sets the given locale's plurality rules. If the rele already exists,
+it will override the previous value.
 
 Example :
 
 ```javascript
-// fr.js
-module.exports.name = 'French';
+var C = require('beyo-i18n/const');
+var plurals = require('beyo-i18n/plurals');
 
-module.exports.plural = function plural(n) {
-  return (n === 0) || (n === 1) ? '1' : '*';
+// fr.js
+var frCA_plural = {
+  languageName: "French (Canadian)",
+  nplurals: [ C.PLURAL_ONE, C.PLURAL_OTHER ],
+  plural: function (n) { return (n > 1) ? 1 : 0; }
 };
+
+plurals.isValid('fr-CA'); // false
+
+plurals.setRule('fr-CA', frCA_plural);
+
+plurals.isValid('fr-CA'); // true
+
 ```
 
-If a locale does not provide a language specification, the loader will assign the proper
-default one that is shipped with the module. If no language specification is found, then
-the locale cannot be loaded and an exception will be thrown.
+All keys must be defined (i.e. `languageName`, `nplurals`, and `plural`) or an errror will be thrown.
 
 ## Language Gender Rules
 
@@ -180,7 +195,7 @@ gender rules *must* be loaded inside a plural rule. If no plural rule applies, u
 ```javascript
 {
   "Restrooms" : {
-    "*": {
+    "other": {
       "n": "Restrooms",
       "m": "Men's rooms",
       "f": "Ladies' rooms"
@@ -206,8 +221,8 @@ object should propose at least these following methods.
 The returned value for a call to `get` should be one of the following :
 
 * `"Some simple string."`
-* `{ "1": "Non plural string", "*": "Default (plural) string" }`
-* `{ "*": { "m": "Male gender", "f": "Female gender", "n": "Neutral gender" } }`
+* `{ "one": "Non plural string", "other": "Default (plural) string" }`
+* `{ "other": { "m": "Male gender", "f": "Female gender", "n": "Neutral gender" } }`
 
 And any combination of these values.
 

@@ -1,10 +1,13 @@
 {
   "name": "beyo-i18n",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Internationalisation module for Node.js with plural forms and paramater subtitutions.",
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "test": "mocha --harmony"
+  },
+  "directories": {
+    "lib": "./lib"
   },
   "repository": {
     "type": "git",
