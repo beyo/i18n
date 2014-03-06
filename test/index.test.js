@@ -4,13 +4,14 @@ var co = require('co');
 
 var I18N = require('../lib/index');
 var C = require('../lib/const');
+var plurals = require('../lib/plurals');
 
 describe('Module entry (i18n)', function () {
 
   before(function () {
     // define dummy locales
-    I18N.setLocale('foo', { name: 'FooTest', plural: function () { return 0; } });
-    I18N.setLocale('bar', { name: 'BarTest', plural: function () { return 0; } });
+    plurals.setRule('foo', { languageName: 'FooTest', nplurals: [ C.MESSAGE_OTHER ], plural: function () { return 0; } });
+    plurals.setRule('bar', { languageName: 'BarTest', nplurals: [ C.MESSAGE_OTHER ], plural: function () { return 0; } });
   });
 
   it('should only allow valid `defaultLocale` values', function () {
@@ -26,7 +27,7 @@ describe('Module entry (i18n)', function () {
 
     _ref.should.equal(I18N.defaultLocale);
 
-    Object.keys(I18N.locales).forEach(function (locale) {
+    Object.keys(plurals.getLanguages()).forEach(function (locale) {
       I18N.defaultLocale = locale;
     });
   });
@@ -60,37 +61,6 @@ describe('Module entry (i18n)', function () {
       I18N.translate.should.not.equal(v);
       _ref.should.equal(I18N.translate);
     });
-  });
-
-  it('should not allow overriding `locales`', function () {
-    var _ref = I18N.locales;
-
-    [
-      function f() {}, {}, undefined, null, true, false, 0, 1, "", "##INVALIDVALUE"
-    ].forEach(function (v) {
-      I18N.locales = v;
-      I18N.locales.should.not.equal(v);
-      _ref.should.equal(I18N.locales);
-    });
-  });
-
-  it('should not allow overriding `setLocale`', function () {
-    var _ref = I18N.setLocale;
-
-    [
-      function f() {}, {}, undefined, null, true, false, 0, 1, "", "##INVALIDVALUE"
-    ].forEach(function (v) {
-      I18N.setLocale = v;
-      I18N.setLocale.should.not.equal(v);
-      _ref.should.equal(I18N.setLocale);
-    });
-  });
-
-  it('should not allow directly modifying `locales`', function () {
-    I18N.locales.TEST = "foo";
-    assert.equal(I18N.locales.TEST, undefined);
-    I18N.locales.should.not.have.property('TEST');
-    I18N.locales.should.not.have.ownProperty('TEST');
   });
 
   describe('Using Global Translator', function () {
@@ -186,14 +156,15 @@ describe('Module entry (i18n)', function () {
   });
 
   it('should allow defining new local specs', function () {
-    I18N.locales.should.not.have.ownProperty('test');
+    plurals.isValid('test').should.be.false;
 
-    I18N.setLocale('test', {
-      name: 'TestLocale',
-      plural: function (n) { return 'other'; }
+    plurals.setRule('test', {
+      languageName: 'TestLocale',
+      nplurals: [ C.MESSAGE_OTHER ],
+      plural: function (n) { return 0; }
     });
 
-    I18N.locales.should.have.ownProperty('test');
+    plurals.isValid('test').should.be.true;
   });
 
   it('should not allow defining invalid specs', function () {

@@ -1,6 +1,6 @@
 {
   "name": "beyo-i18n",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Internationalisation module for Node.js with plural forms and paramater subtitutions.",
   "main": "lib/index.js",
   "scripts": {
@@ -14,6 +14,7 @@
     "beyo",
     "i18n",
     "plural",
+    "gender",
     "subtitution",
     "translate",
     "translation",

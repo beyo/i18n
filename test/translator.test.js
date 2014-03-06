@@ -9,53 +9,55 @@ var Q = require('q');
 
 var I18N = require('../lib/index');
 var C = require('../lib/const');
+var plurals = require('../lib/plurals');
 
 
 describe('Testing Translator', function () {
 
   var localePath;
   var testLocale = 'test';
-  var testLocaleSpecs = {
-    name: 'TestLang',
-    plural: function plural(n) { return (n === 1) ? '1' : '*'; }
+  var testLocaleRule = {
+    languageName: 'TestLang',
+    nplurals: [ C.PLURAL_ONE, C.PLURAL_OTHER ],
+    plural: function (n) { return (n === 1) ? 0 : 1; }
   };
   var testMessages = {
     'Hello world!': 'Test!',
     'Hello plural!': {
-      '1': 'Hello you!',
-      '*': 'Hello everyone!'
+      'one': 'Hello you!',
+      'other': 'Hello everyone!'
     },
     '{{count}} notifications': {
-      '1': '1 message',
-      '*': '{{count}} messages'
+      'one': '1 message',
+      'other': '{{count}} messages'
     },
     'Hello you!': 'Hello {{person.names.0.first}}!',
     'Hello gender!': {
-      '*': {
+      'other': {
         'm': 'Hello m!',
         'f': 'Hello f!',
         'n': 'Hello n!'
       }
     },
     'Hello gender plural!': {
-      '1': {
+      'one': {
         'm': 'Hello m non-plural!',
         'n': 'Hello n non-plural!',
       },
-      '*': {
+      'other': {
         'f': 'Hello f plural!',
         'n': 'Hello n plural!'
       }
     },
     'Hello invalid gender!': {
-      '*': {
+      'other': {
         'f': 'Hello ladies!'
       }
     }
   };
 
   before(function (done) {
-    I18N.setLocale(testLocale, testLocaleSpecs);
+    plurals.setRule(testLocale, testLocaleRule);
 
     tmp.dir({ prefix: TMP_FILE_PREFIX, unsafeCleanup: true }, function tmpDirCreated(err, path) {
       if (err) {
@@ -166,15 +168,17 @@ describe('Testing Translator', function () {
   });
 
   it('should not allow overriding locales', function (done) {
-    var translator = new Translator({ locales: localePath });
+    var translator = new Translator({ locales: localePath }).on('initialized', function () {
+      co(function * () {
+        yield translator.load(localePath);
+      })(function (err) {
+        err.should.be.an.Error;
 
-    co(function * () {
-      yield translator.load(localePath);
-    })(function (err) {
-      err.should.be.an.Error;
-
-      done();
+        done();
+      });
     });
+
+    this.timeout(500);
   });
 
   it('should load locales after init', function * () {
@@ -202,7 +206,7 @@ describe('Testing Translator', function () {
 
     _ref.should.equal(translator.defaultLocale);
 
-    Object.keys(I18N.locales).forEach(function (locale) {
+    Object.keys(plurals.getLanguages()).forEach(function (locale) {
       translator.defaultLocale = locale;
     });
   });
@@ -254,7 +258,7 @@ describe('Testing Translator', function () {
 
     _ref.should.equal(translator.defaultLocale);
 
-    Object.keys(I18N.locales).forEach(function (locale) {
+    Object.keys(plurals.getLanguages()).forEach(function (locale) {
       translator.defaultLocale = locale;
     });
   });

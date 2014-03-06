@@ -2,6 +2,6 @@
 --require co-mocha
 --require ./test/init
 --timeout 60000
---reporter spec
+--reporter dot
 --ui bdd
 --recursive
