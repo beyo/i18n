@@ -184,8 +184,8 @@ it will override the previous value.
 Example :
 
 ```javascript
-var C = require('beyo-i18n/const');
-var plurals = require('beyo-i18n/plurals');
+var C = require('beyo-i18').const;
+var plurals = require('beyo-i18n').plurals;
 
 // fr.js
 var frCA_plural = {
