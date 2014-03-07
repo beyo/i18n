@@ -14,6 +14,26 @@ describe('Module entry (i18n)', function () {
     plurals.setRule('bar', { languageName: 'BarTest', nplurals: [ C.MESSAGE_OTHER ], plural: function () { return 0; } });
   });
 
+  it('should not allow extending `plurals`', function () {
+    plurals.should.not.have.ownProperty('foo');
+    plurals.foo = 'bar';
+    plurals.should.not.have.ownProperty('foo');
+
+    I18N.plurals.should.not.have.ownProperty('foo');
+    I18N.plurals.foo = 'bar';
+    I18N.plurals.should.not.have.ownProperty('foo');
+  });
+
+  it('should not allow extending `const`', function () {
+    C.should.not.have.ownProperty('foo');
+    C.foo = 'bar';
+    C.should.not.have.ownProperty('foo');
+
+    I18N.const.should.not.have.ownProperty('foo');
+    I18N.const.foo = 'bar';
+    I18N.const.should.not.have.ownProperty('foo');
+  });
+
   it('should expose `Translator`', function () {
     I18N.Translator.should.be.a.Function;
     I18N.Translator.should.be.a.equal(require('../lib/translator'));
