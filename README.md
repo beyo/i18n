@@ -54,7 +54,22 @@ co(function * () {
 })();
 ```
 
-## Translator Configuration
+## Translator
+
+The module offers two ways to use a translator.
+
+1. **A global translator**. Accessed via `i18n.getGlobalTranslator()`, this instance can only
+be created, or initialized, by calling `i18n.init(options)` where `options` is an object
+containing the translator's configuration. It should be noted that any translator events
+hooked to the global translator are persistent at all times. This does not apply for custom
+events. (See Translator Events.)
+2. **Private translators**. Accessed via `i18n.Translator`, a constructor function, these
+instances are not managed by the module and offer a way to load custom translation strings.
+For example, on a module application, each module might have their own custom, independant,
+translator instance.
+
+
+### Translator Configuration
 
 While the module does not require initialization, a project may require to
 customize some of the features. By default, the i18n module will load all
@@ -64,7 +79,7 @@ strings.
 * **defaultLocale** *{String}* : The default locale to use when translating a message
 and no locale is provided. This setting is global! And you cannot set a locale that
 is not available. An invalid locale will throw an exception. All available locales are
-listed in the `i18n.locales`'s object properties. *(Default: `'en'`)*
+listed in the `i18n.plurals.getLanguages()`'s returned object. *(Default: `'en'`)*
 
 * **defaultGender** *{String}* : The default gender to use when translating a message
 and no gender is provided. A gender must be one of these values : `"m"`, `"f"`, and `"n"`.
@@ -86,7 +101,7 @@ initializing the translator. The value may be of type `String`, `Array` or `Obje
   var localesFiles = [ 'path/to/en.json', 'path/to/fr.json', ... ];
   ```
 
-## Events
+### Translator Events
 
 All translators emit events. These may be used to extend a translator, or to monitor it's
 activity.
@@ -131,7 +146,7 @@ we may find fractions, negative or otherwise unspecified or very large numbers. 
 translation, this should always be specified at all times. This is also the fallback
 translation in case other language keys or not defined.
 
-**Note**: see `const.js` for more constants.
+**Note**: see `const.js` for more constants, also accessible via `i18n.const`.
 
 **Note**: gettext make use of translations like this :
 
@@ -179,11 +194,13 @@ var frCA_plural = {
   plural: function (n) { return (n > 1) ? 1 : 0; }
 };
 
-plurals.isValid('fr-CA'); // false
+plurals.isValid('fr-CA');               // -> true
+plurals.getRule('fr-CA').languageName;  // -> "French"
 
 plurals.setRule('fr-CA', frCA_plural);
 
-plurals.isValid('fr-CA'); // true
+plurals.isValid('fr-CA');               // -> true
+plurals.getRule('fr-CA').languageName;  // -> "French (Canadian)"
 
 ```
 
