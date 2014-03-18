@@ -134,6 +134,15 @@ describe('Testing Translator', function () {
     (yield translator.translate('Hello world!', { locale: testLocale })).should.equal('Test!');
   });
 
+  it('should expose loaded locales', function * () {
+    var translator = new Translator();
+
+    yield translator.load(localePath);
+
+    translator.loadedLocales.should.have.lengthOf(1);
+    translator.loadedLocales[0].should.equal(testLocale);
+  });
+
   it('should load locales from array', function * () {
     var translator = new Translator();
 

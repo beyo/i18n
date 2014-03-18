@@ -9,19 +9,21 @@ So, why another i18n module? Because I wanted a module which was not dependant o
 with unnecessary dependencies or features. I wanted a module that was standalone and asychronous.
 I wanted a module that followed standards. I wanted it to be easily extended.
 
+
 ## Installation
 
 ```
 npm install beyo-i18n
 ```
 
+
 ## Features
 
 * Asynchronous API through generator functions [`co`](https://github.com/visionmedia/co) compatible.
-* Autoloading localization strings via various loaders (see Loaders).
+* Autoloading localization strings via various loaders (see [Loaders](#loaders)).
 * Global translator and instance translators.
 * Fallback to default locale per translator.
-* Automatically handling plural forms in a variety of different languages (see Supported locales).
+* Automatically handling plural forms in a variety of different languages (see [Supported locales](#supported-locales)).
 * Automatically handling gender forms (locale agnostic).
 * Message token subtitution during translation.
 * Translators emit events.
@@ -30,6 +32,7 @@ npm install beyo-i18n
 * Fully tested with a target of 100% coverage.
 * Well structured code.
 
+
 ## Usage
 
 ```javascript
@@ -37,7 +40,7 @@ npm install beyo-i18n
 var i18n = require('beyo-i18n').init(options);
 
 co(function * () {
-  var data = {
+  var options = {
     locale: 'fr',       // set the locale to use to translate
     data: {
       person: {
@@ -49,10 +52,11 @@ co(function * () {
     }
   };
 
-  yield i18n.translate("Hello {{person.firstname}}!", data);
+  yield i18n.translate("Hello {{person.firstname}}!", options);
   // -> "Bonjour John !"
 })();
 ```
+
 
 ## Translator
 
@@ -62,7 +66,7 @@ The module offers two ways to use a translator.
 be created, or initialized, by calling `i18n.init(options)` where `options` is an object
 containing the translator's configuration. It should be noted that any translator events
 hooked to the global translator are persistent at all times. This does not apply for custom
-events. (See Translator Events.)
+events. (See [Translator Events](#translator-events).)
 2. **Private translators**. Accessed via `i18n.Translator`, a constructor function, these
 instances are not managed by the module and offer a way to load custom translation strings.
 For example, on a module application, each module might have their own custom, independant,
@@ -101,6 +105,29 @@ initializing the translator. The value may be of type `String`, `Array` or `Obje
   var localesFiles = [ 'path/to/en.json', 'path/to/fr.json', ... ];
   ```
 
+
+### Translate Options
+
+When translating messages, the translator will try to guess as best as it can, however to
+manually specify the behaviour (gender, plural, etc.), and to provide data in strings, then
+it can be done via the `options` argument.
+
+```javascript
+var text = yield translator.translate(untranslatedString, options);
+```
+
+* **locale** *{String}* : the locale to use. By default, the translator will take it's default
+locale. This options will override it. The value must be a valid locale or an error will be thrown.
+* **gender** *{String}* : the gender to use. By default, the translator will use it's default gender.
+This can be overridden to provide a specific gender. (See [Gender Rules](#language-gender-rules).)
+* **plurality** *{Number}* : plural rules are language specific, and cannot be overridden per se,
+but omitting this option will use the default (`other`) plural rules automatically. The value
+should be numeric.
+* **data** *{Object}* : an object to pass to the parser when replacing tokens in the translated
+strings. A missing token will be replaced by an empty string (`''`). The `data` must be a
+recursive object when keys like `foo.bar.buz` are provided (ex: `{ foo: { bar: { buz: 'hey!' } } }`).
+
+
 ### Translator Events
 
 All translators emit events. These may be used to extend a translator, or to monitor it's
@@ -113,12 +140,25 @@ The listener will receive one argument; an object, for example : `{ previousValu
 The listener will receive one argument; an object, for example : `{ previousValue: 'n' }`.
 * **localeLoaded** *(Object)* : fired whenever a locale is loaded into the translator. This is
 handy when extending locale loaders. The listener will receive one argument; an object, for
-example : `{ locale: 'en', loader: [Object] }` (see Loaders).
+example : `{ locale: 'en', loader: [Object] }` (see [Loaders](#loaders)).
 * **translation** *(Object)* : fired whenever a string is translated. The listener will
 receive one argument; an object, for example : `{ locale: 'fr', originalMessage: 'Hello!',
 translatedMessage: 'Bonjour!', options: null }` where the `options` are the actual object
 passed to the `translate` function. **Note**: replacing `translatedMessage`'s value will
 result in changing the translation's returned string!
+
+
+### Translator API
+
+The translator's public API is very simplistic and does not allow external modification of
+the instance. Overriding any property will be ignored. Since the `Translator` class inherits
+from `EventEmitter`, it has the same functionality.
+
+* **defaultLocale** *{String}* *{get|set}* : the default locale for the translator.
+* **defaultGender** *{String}* *{get|set}* : the default gender for the translator.
+* **load** *{GeneratorFunction}* : load some locales. This is the same as specifying `locales` to
+the class' constructor. (See [Translator Configuration](#translator-configuration)
+
 
 ## Language Plural Rules
 
@@ -206,6 +246,7 @@ plurals.getRule('fr-CA').languageName;  // -> "French (Canadian)"
 
 All keys must be defined (i.e. `languageName`, `nplurals`, and `plural`) or an errror will be thrown.
 
+
 ## Language Gender Rules
 
 Some loaders will enable gender specifications when loading locales content. These
@@ -224,6 +265,7 @@ gender rules *must* be loaded inside a plural rule. If no plural rule applies, u
 ```
 
 A gender key must be one of the following values (case sensitive) : `'m'` for male, `'f'` for female, and `'n'` for neutral.
+
 
 ## Loaders
 
@@ -245,6 +287,7 @@ The returned value for a call to `get` should be one of the following :
 
 And any combination of these values.
 
+
 ### List of available (or soon to be) adapters
 
 * **json** : standard JavaScript Object adapter. Use Node.js' `require` functionality to
@@ -255,10 +298,19 @@ an `Object`.
 
 * **gettext** : *not implemented*
 
+
+## Supported locales
+
+This module supports over 191 different locales. Not all of them are fully tested, and
+contributions are welcome on this subject (i.e. plural rules). See the [plural rules](lib/plurals/index.js)
+file for more information on all supported locales.
+
+
 ## Contribution
 
 All contributions welcome! Every PR **must** be accompanied by their associated
 unit tests!
+
 
 ## License
 
