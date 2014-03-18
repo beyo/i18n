@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/beyo/i18n.png)](https://travis-ci.org/beyo/i18n)
 [![Stories in Ready](http://badge.waffle.io/beyo/i18n.png)](http://waffle.io/beyo/i18n)
 
+[![NPM](https://nodei.co/npm/beyo-i18n.png?compact=true)](https://nodei.co/npm/beyo-i18n/)
+
 Internationalisation module for Node.js with plural forms and paramater subtitutions.
 
 So, why another i18n module? Because I wanted a module which was not dependant or bloated
