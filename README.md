@@ -158,6 +158,9 @@ from `EventEmitter`, it has the same functionality.
 * **defaultGender** *{String}* *{get|set}* : the default gender for the translator.
 * **load** *{GeneratorFunction}* : load some locales. This is the same as specifying `locales` to
 the class' constructor. (See [Translator Configuration](#translator-configuration)
+* **loadedLocales** *{Array}* *{get}* : returns an array containing all the locales loaded
+into which messages can be translated.
+* **translate** *{GeneratorFunction}* : the translate message method.
 
 
 ## Language Plural Rules
