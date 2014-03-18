@@ -1,6 +1,6 @@
 {
   "name": "beyo-i18n",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Internationalisation module for Node.js with plural forms and paramater subtitutions.",
   "main": "./lib/index.js",
   "scripts": {
@@ -33,16 +33,16 @@
   },
   "homepage": "https://github.com/beyo/i18n",
   "devDependencies": {
-    "semicov": "latest",
-    "should": "latest",
-    "mocha": "latest",
-    "tmp": "latest",
-    "co-mocha": "latest",
-    "q": "latest"
+    "tmp": "0.0.23",
+    "q": "^1.0.1",
+    "semicov": "^0.1.1-2",
+    "should": "^3.1.4",
+    "mocha": "^1.18.2",
+    "co-mocha": "0.0.2"
   },
   "dependencies": {
-    "co": "latest",
-    "co-fs": "latest"
+    "co-glob": "0.0.1",
+    "co": "^3.0.5"
   },
   "engines": {
     "node": ">= 0.11.9"

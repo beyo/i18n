@@ -1,5 +1,6 @@
 
 const TMP_FILE_PREFIX = 'beyo-i18n-translator-';
+const PATH_SEP = require('path').sep;
 
 var Translator = require('../lib/translator');
 var tmp = require('tmp');
@@ -95,18 +96,10 @@ describe('Testing Translator', function () {
     this.timeout(500);
   });
 
-  it('should fail initializing', function (done) {
+  it('should fail initializing', function () {
     (function () {
       new Translator({ defaultLocale: "###INVALIDLOCALE" });
     }).should.throw();
-
-    new Translator({ locales: "***INVALIDPATH" }).on('initialized', function (err) {
-      err.should.be.instanceof(Error);
-
-      done();
-    });
-
-    this.timeout(500);
   });
 
 
@@ -115,7 +108,7 @@ describe('Testing Translator', function () {
       true, false, null, undefined, {}, -1, 0, 1, 2, 3
     ].forEach(function(locales, index, arr) {
       new Translator({ locales: locales }).on('initialized', function (err) {
-        err.should.be.instanceof(Error);
+        err.should.be.an.Error;
 
         if (index === arr.length - 1) {
           done();
@@ -126,10 +119,18 @@ describe('Testing Translator', function () {
     this.timeout(500);
   });
 
+  it('should still load on invalid locales directory', function (done) {
+    new Translator({ locales: "/path/to/invalid/locales/directory" }).on('initialized', function (err) {
+      assert.equal(err, undefined);
+
+      done();
+    });
+  });
+
   it('should load locales from specified directory', function * () {
     var translator = new Translator();
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('Hello world!', { locale: testLocale })).should.equal('Test!');
   });
@@ -137,7 +138,7 @@ describe('Testing Translator', function () {
   it('should expose loaded locales', function * () {
     var translator = new Translator();
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     translator.loadedLocales.should.have.lengthOf(1);
     translator.loadedLocales[0].should.equal(testLocale);
@@ -177,9 +178,9 @@ describe('Testing Translator', function () {
   });
 
   it('should not allow overriding locales', function (done) {
-    var translator = new Translator({ locales: localePath }).on('initialized', function () {
+    var translator = new Translator({ locales: localePath + PATH_SEP + '**' }).on('initialized', function () {
       co(function * () {
-        yield translator.load(localePath);
+        yield translator.load(localePath + PATH_SEP + '**');
       })(function (err) {
         err.should.be.an.Error;
 
@@ -195,7 +196,7 @@ describe('Testing Translator', function () {
 
     translator.defaultLocale.should.equal(testLocale);
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('Hello world!')).should.equal('Test!');
   });
@@ -277,7 +278,7 @@ describe('Testing Translator', function () {
 
     translator.defaultLocale.should.not.equal(testLocale);
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('Hello world!')).should.equal('Hello world!');
     (yield translator.translate('Hello world!', { locale: testLocale })).should.equal('Test!');
@@ -288,7 +289,7 @@ describe('Testing Translator', function () {
 
     translator.defaultLocale.should.not.equal(testLocale);
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('Hello world!', { locale: testLocale, plurality: 1 })).should.equal('Test!');
     (yield translator.translate('Hello world!', { locale: testLocale, plurality: 2 })).should.equal('Test!');
@@ -309,7 +310,7 @@ describe('Testing Translator', function () {
 
     translator.defaultLocale.should.equal(testLocale);
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('Hello gender!')).should.equal('Hello n!');
 
@@ -324,7 +325,7 @@ describe('Testing Translator', function () {
   it('should throw exception on invalid gender during translation', function (done) {
     var def1 = Q.defer();
     var def2 = Q.defer();
-    var translator = new Translator({ defaultLocale: testLocale, locales: localePath });
+    var translator = new Translator({ defaultLocale: testLocale, locales: localePath + PATH_SEP + '**' });
 
     translator.defaultLocale.should.equal(testLocale);
 
@@ -365,7 +366,7 @@ describe('Testing Translator', function () {
 
     translator.defaultLocale.should.equal(testLocale);
 
-    yield translator.load(localePath);
+    yield translator.load(localePath + PATH_SEP + '**');
 
     (yield translator.translate('{{count}} notifications')).should.equal(' messages');
     (yield translator.translate('{{count}} notifications', { data: data })).should.equal('10 messages');
@@ -420,7 +421,7 @@ describe('Testing Translator', function () {
       });
 
       co(function * () {
-        yield translator.load(localePath);
+        yield translator.load(localePath + PATH_SEP + '**');
       })();
 
       this.timeout(500);
