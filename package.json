@@ -38,11 +38,11 @@
     "semicov": "^0.1.1-2",
     "should": "^3.3.1",
     "mocha": "^1.18.2",
-    "co-mocha": "0.0.2"
+    "co-mocha": "0.0.4"
   },
   "dependencies": {
     "co-glob": "0.0.1",
-    "co": "^3.0.5",
+    "co": "^3.0.6",
     "semicov": "^0.1.1",
     "should": "^3.3.1"
   },
